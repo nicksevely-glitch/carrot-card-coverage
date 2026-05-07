@@ -89,7 +89,7 @@
           }
           if (contractingIsEEA && !coverageIsEEA) {
             return {
-              status: "supported",
+              status: "kyc_required",
               label: "Local Issuance",
               issuingEntity: "Local Airwallex entity",
               detail: `Issued locally in ${coverageCountry}.`,
@@ -98,7 +98,7 @@
           }
           if (!contractingIsEEA && coverageIsEEA) {
             return {
-              status: "supported",
+              status: "kyc_required",
               label: "Local Issuance",
               issuingEntity: "Netherlands (EEA)",
               detail: "Issued via Airwallex Netherlands.",
@@ -106,7 +106,7 @@
             };
           }
           return {
-            status: "supported",
+            status: "kyc_required",
             label: "Local Issuance",
             issuingEntity: "Local Airwallex entity",
             detail: `Issued locally in ${coverageCountry}.`,
@@ -124,8 +124,9 @@
       }
 
       const statusConfig = {
-        supported:   { bg: "#0d2e1a", border: "#1a5c32", dot: "#22c55e", text: "#86efac", pill: "#14532d" },
-        conditional: { bg: "#2a1f00", border: "#5c3d00", dot: "#f59e0b", text: "#fcd34d", pill: "#78350f" },
+        supported:    { bg: "#0d2e1a", border: "#1a5c32", dot: "#22c55e", text: "#86efac", pill: "#14532d", pillLabel: "Ready" },
+        kyc_required: { bg: "#2a1f00", border: "#5c3d00", dot: "#f59e0b", text: "#fcd34d", pill: "#78350f", pillLabel: "KYC Req'd" },
+        conditional:  { bg: "#2a1f00", border: "#5c3d00", dot: "#f59e0b", text: "#fcd34d", pill: "#78350f", pillLabel: "Cond." },
       };
 
       function Combobox({ label, options, value, onChange, placeholder }) {
@@ -237,7 +238,7 @@
               )}
             </div>
             <div style={{ background: sc.pill, borderRadius: 6, padding: "2px 8px", fontSize: 10, fontWeight: 700, color: sc.text, textTransform: "uppercase", letterSpacing: "0.08em", whiteSpace: "nowrap", alignSelf: "center" }}>
-              {result.status === "supported" ? "Ready" : "Cond."}
+              {sc.pillLabel}
             </div>
           </div>
         );
@@ -245,7 +246,7 @@
 
       function SummaryBar({ contracting, coverageCountries }) {
         const counts = useMemo(() => {
-          const c = { supported: 0, conditional: 0 };
+          const c = { supported: 0, kyc_required: 0, conditional: 0 };
           coverageCountries.forEach(country => {
             const r = getCoverageInfo(contracting, country);
             if (r) c[r.status] = (c[r.status] || 0) + 1;
@@ -256,7 +257,8 @@
         if (total === 0) return null;
         return (
           <div style={{ display: "flex", gap: 14, padding: "12px 18px", background: "#0d0d1a", borderBottom: "1px solid #1a1a26", flexWrap: "wrap", alignItems: "center" }}>
-            {counts.supported > 0 && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#94a3b8" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e" }} /><strong style={{ color: "#e2e8f0" }}>{counts.supported}</strong> Local issuance</div>}
+            {counts.supported > 0 && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#94a3b8" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e" }} /><strong style={{ color: "#e2e8f0" }}>{counts.supported}</strong> Ready</div>}
+            {counts.kyc_required > 0 && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#94a3b8" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "#f59e0b" }} /><strong style={{ color: "#e2e8f0" }}>{counts.kyc_required}</strong> KYC required</div>}
             {counts.conditional > 0 && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#94a3b8" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "#f59e0b" }} /><strong style={{ color: "#e2e8f0" }}>{counts.conditional}</strong> Cross-border</div>}
             <div style={{ marginLeft: "auto", fontSize: 12, color: "#94a3b8" }}>{total} countr{total === 1 ? "y" : "ies"}</div>
           </div>
@@ -317,8 +319,8 @@
               <h3 style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 12 }}>Coverage Tiers</h3>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 {[
-                  { dot: "#22c55e", label: "Local Issuance", desc: "EEA countries (via Netherlands), plus UK, Canada, Australia, Singapore, Hong Kong, Israel, and US. Issued by local Airwallex entity." },
-                  { dot: "#f59e0b", label: "Cross-Border via Singapore", desc: "Around 30 markets including Brazil, Mexico, UAE, Malaysia, Philippines and others. Virtual cards only. Additional Singapore KYC required." },
+                  { dot: "#22c55e", label: "Ready", desc: "Same country, or both within EEA. No additional KYC required." },
+                  { dot: "#f59e0b", label: "KYC Required / Conditional", desc: "Coverage is possible but additional KYC is needed, or cards are cross-border virtual only via Singapore." },
                 ].map(tier => (
                   <div key={tier.label} style={{ flex: "1 1 200px", display: "flex", alignItems: "flex-start", gap: 10, background: "#111118", border: "1px solid #1e1e30", borderRadius: 10, padding: "12px 14px" }}>
                     <div style={{ width: 7, height: 7, borderRadius: "50%", background: tier.dot, marginTop: 4, flexShrink: 0 }} />
