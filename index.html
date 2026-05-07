@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Carrot Card Coverage</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { background: #0a0a0f; }
+      input::placeholder { color: #334155; }
+      ::-webkit-scrollbar { width: 4px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #2a2a40; border-radius: 4px; }
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+      const { useState, useMemo, useRef, useEffect } = React;
+
+      const LOCALLY_ISSUED = new Set([
+        "Austria","Belgium","Bulgaria","Croatia","Cyprus","Czech Republic","Denmark",
+        "Estonia","Finland","France","Germany","Greece","Hungary","Ireland","Italy",
+        "Latvia","Lithuania","Luxembourg","Malta","Netherlands","Poland","Portugal",
+        "Romania","Slovakia","Slovenia","Spain","Sweden",
+        "Iceland","Liechtenstein","Norway","Switzerland",
+        "United States","Australia","Singapore","Israel","Canada","Hong Kong","United Kingdom",
+      ]);
+
+      const CROSS_BORDER_SINGAPORE = new Set([
+        "Mexico","Brazil","New Zealand","Malaysia","UAE","Philippines","Thailand",
+        "Argentina","Colombia","Chile","Turkey","Costa Rica","Egypt","Peru",
+        "Dominican Republic","Ecuador","Georgia","Bosnia & Herzegovina","Belarus",
+        "Ghana","Paraguay","Montenegro","Uzbekistan","Uganda","Kazakhstan",
+        "Guatemala","Trinidad & Tobago","Tunisia","Jamaica","Kyrgyzstan","Uruguay",
+      ]);
+
+      const FEATURED_CONTRACTING = [
+        "United Kingdom","Canada","Germany","France","Ireland","Netherlands",
+        "Sweden","Spain","Italy","Switzerland","Belgium","Denmark","Norway",
+        "Finland","Austria","Poland","Portugal","Australia","Singapore",
+        "Hong Kong","Israel","United States",
+      ];
+
+      const ALL_COVERAGE_COUNTRIES = [
+        ...Array.from(LOCALLY_ISSUED),
+        ...Array.from(CROSS_BORDER_SINGAPORE),
+      ].filter((v, i, a) => a.indexOf(v) === i).sort();
+
+      const EEA = new Set([
+        "Austria","Belgium","Bulgaria","Croatia","Cyprus","Czech Republic","Denmark",
+        "Estonia","Finland","France","Germany","Greece","Hungary","Ireland","Italy",
+        "Latvia","Lithuania","Luxembourg","Malta","Netherlands","Poland","Portugal",
+        "Romania","Slovakia","Slovenia","Spain","Sweden","Iceland","Liechtenstein",
+        "Norway","Switzerland"
+      ]);
+
+      function getCoverageInfo(contractingCountry, coverageCountry) {
+        if (!contractingCountry || !coverageCountry) return null;
+        const isLocallyIssued = LOCALLY_ISSUED.has(coverageCountry);
+        const isCrossBorder = CROSS_BORDER_SINGAPORE.has(coverageCountry);
+        if (!isLocallyIssued && !isCrossBorder) return null;
+        if (isLocallyIssued) {
+          const isEEA = EEA.has(coverageCountry);
+          return {
+            status: "supported",
+            label: "Local Issuance",
+            issuingEntity: isEEA ? "Netherlands (EEA)" : "Local Airwallex entity",
+            detail: isEEA
+              ? "Issued via Airwallex Netherlands. No cross-border KYC required."
+              : `Issued locally in ${coverageCountry}. Strongest coverage tier.`,
+          };
+        }
+        const contractingNeedsSGKYC = !LOCALLY_ISSUED.has(contractingCountry);
+        return {
+          status: "conditional",
+          label: "Cross-Border (via SG)",
+          issuingEntity: "Singapore",
+          detail: "Virtual cards only. Clinic acceptance may vary.",
+          kycNote: `Requires ${contractingNeedsSGKYC ? "Singapore KYC" : "local + Singapore KYC"}.`,
+        };
+      }
+
+      const statusConfig = {
+        supported:   { bg: "#0d2e1a", border: "#1a5c32", dot: "#22c55e", text: "#86efac", pill: "#14532d" },
+        conditional: { bg: "#2a1f00", border: "#5c3d00", dot: "#f59e0b", text: "#fcd34d", pill: "#78350f" },
+      };
+
+      function Combobox({ label, options, value, onChange, placeholder }) {
+        const [query, setQuery] = useState("");
+        const [open, setOpen] = useState(false);
+        useEffect(() => { if (value) setQuery(value); }, [value]);
+        const filtered = useMemo(() =>
+          options.filter(o => o.toLowerCase().includes(query.toLowerCase())).slice(0, 80),
+          [options, query]
+        );
+        return (
+          <div style={{ position: "relative", flex: "1 1 200px" }}>
+            <label style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "#64748b", display: "block", marginBottom: 7 }}>{label}</label>
+            <input
+              value={query}
+              onChange={e => { setQuery(e.target.value); onChange(""); setOpen(true); }}
+              onFocus={() => setOpen(true)}
+              onBlur={() => setTimeout(() => setOpen(false), 160)}
+              placeholder={placeholder}
+              style={{ width: "100%", background: "#0d0d1a", border: `1px solid ${value ? "#f97316" : "#2a2a40"}`, borderRadius: 8, padding: "10px 12px", color: "#e2e8f0", fontSize: 14, outline: "none", boxSizing: "border-box" }}
+            />
+            {open && filtered.length > 0 && (
+              <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 200, background: "#111118", border: "1px solid #2a2a40", borderRadius: 8, maxHeight: 200, overflowY: "auto", boxShadow: "0 8px 32px rgba(0,0,0,0.7)" }}>
+                {filtered.map(c => (
+                  <div key={c} onMouseDown={() => { onChange(c); setQuery(c); setOpen(false); }}
+                    style={{ padding: "8px 12px", cursor: "pointer", fontSize: 13, borderBottom: "1px solid #1a1a28" }}
+                    onMouseEnter={e => e.currentTarget.style.background = "#1a1a2e"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                  >{c}</div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      function CoverageTagInput({ selected, onAdd, onRemove }) {
+        const [query, setQuery] = useState("");
+        const [open, setOpen] = useState(false);
+        const inputRef = useRef(null);
+        const filtered = useMemo(() =>
+          ALL_COVERAGE_COUNTRIES.filter(c => c.toLowerCase().includes(query.toLowerCase()) && !selected.includes(c)).slice(0, 80),
+          [query, selected]
+        );
+        return (
+          <div style={{ flex: "1 1 280px" }}>
+            <label style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "#64748b", display: "block", marginBottom: 7 }}>Member Coverage Countries</label>
+            <div onClick={() => inputRef.current && inputRef.current.focus()}
+              style={{ minHeight: 44, background: "#0d0d1a", border: `1px solid ${selected.length > 0 ? "#f97316" : "#2a2a40"}`, borderRadius: 8, padding: "6px 10px", display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", cursor: "text" }}>
+              {selected.map(c => {
+                const dot = LOCALLY_ISSUED.has(c) ? "#22c55e" : "#f59e0b";
+                return (
+                  <span key={c} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#1a1a2e", border: "1px solid #2d2d4e", borderRadius: 6, padding: "2px 8px 2px 6px", fontSize: 12, color: "#cbd5e1", whiteSpace: "nowrap" }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: dot, flexShrink: 0 }} />
+                    {c}
+                    <span onMouseDown={e => { e.preventDefault(); onRemove(c); }} style={{ marginLeft: 2, cursor: "pointer", color: "#475569", fontSize: 14, lineHeight: 1 }}>×</span>
+                  </span>
+                );
+              })}
+              <div style={{ position: "relative", flex: "1 1 120px", minWidth: 120 }}>
+                <input ref={inputRef} value={query}
+                  onChange={e => { setQuery(e.target.value); setOpen(true); }}
+                  onFocus={() => setOpen(true)}
+                  onBlur={() => setTimeout(() => setOpen(false), 160)}
+                  placeholder={selected.length === 0 ? "Type to add countries…" : "Add another…"}
+                  style={{ width: "100%", background: "transparent", border: "none", color: "#e2e8f0", fontSize: 13, outline: "none", padding: "2px 0" }}
+                />
+                {open && filtered.length > 0 && (
+                  <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, minWidth: 220, zIndex: 200, background: "#111118", border: "1px solid #2a2a40", borderRadius: 8, maxHeight: 200, overflowY: "auto", boxShadow: "0 8px 32px rgba(0,0,0,0.7)" }}>
+                    {filtered.map(c => {
+                      const dot = LOCALLY_ISSUED.has(c) ? "#22c55e" : "#f59e0b";
+                      return (
+                        <div key={c} onMouseDown={() => { onAdd(c); setQuery(""); }}
+                          style={{ padding: "8px 12px", cursor: "pointer", fontSize: 13, borderBottom: "1px solid #1a1a28", display: "flex", alignItems: "center", gap: 8 }}
+                          onMouseEnter={e => e.currentTarget.style.background = "#1a1a2e"}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                        >
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: dot, flexShrink: 0 }} />
+                          {c}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      function ResultRow({ contracting, country, index }) {
+        const result = getCoverageInfo(contracting, country);
+        if (!result) return null;
+        const sc = statusConfig[result.status];
+        return (
+          <div style={{ display: "grid", gridTemplateColumns: "160px 1fr auto", alignItems: "start", gap: 16, padding: "14px 18px", background: index % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent", borderBottom: "1px solid #1a1a26", animation: "fadeIn 0.2s ease" }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0", paddingTop: 1 }}>{country}</div>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4 }}>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: sc.dot, boxShadow: `0 0 6px ${sc.dot}`, flexShrink: 0 }} />
+                <span style={{ fontSize: 12, fontWeight: 600, color: sc.text }}>{result.label}</span>
+                {result.issuingEntity && <span style={{ fontSize: 11, color: "#475569" }}>· via {result.issuingEntity}</span>}
+              </div>
+              <div style={{ fontSize: 12, color: "#64748b", lineHeight: 1.5 }}>
+                {result.detail}
+                {result.kycNote && <span style={{ color: "#92400e", marginLeft: 6 }}>⚠ {result.kycNote}</span>}
+              </div>
+            </div>
+            <div style={{ background: sc.pill, borderRadius: 6, padding: "2px 8px", fontSize: 10, fontWeight: 700, color: sc.text, textTransform: "uppercase", letterSpacing: "0.08em", whiteSpace: "nowrap", alignSelf: "center" }}>
+              {result.status === "supported" ? "✓ Ready" : "~ Cond."}
+            </div>
+          </div>
+        );
+      }
+
+      function SummaryBar({ contracting, coverageCountries }) {
+        const counts = useMemo(() => {
+          const c = { supported: 0, conditional: 0 };
+          coverageCountries.forEach(country => {
+            const r = getCoverageInfo(contracting, country);
+            if (r) c[r.status] = (c[r.status] || 0) + 1;
+          });
+          return c;
+        }, [contracting, coverageCountries]);
+        const total = coverageCountries.length;
+        if (total === 0) return null;
+        return (
+          <div style={{ display: "flex", gap: 14, padding: "12px 18px", background: "#0d0d1a", borderBottom: "1px solid #1a1a26", flexWrap: "wrap", alignItems: "center" }}>
+            {counts.supported > 0 && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#94a3b8" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e" }} /><strong style={{ color: "#e2e8f0" }}>{counts.supported}</strong> Local issuance</div>}
+            {counts.conditional > 0 && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#94a3b8" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "#f59e0b" }} /><strong style={{ color: "#e2e8f0" }}>{counts.conditional}</strong> Cross-border</div>}
+            <div style={{ marginLeft: "auto", fontSize: 12, color: "#475569" }}>{total} countr{total === 1 ? "y" : "ies"}</div>
+          </div>
+        );
+      }
+
+      function App() {
+        const [contracting, setContracting] = useState("");
+        const [coverageCountries, setCoverageCountries] = useState([]);
+        const addCoverage = (c) => setCoverageCountries(prev => prev.includes(c) ? prev : [...prev, c]);
+        const removeCoverage = (c) => setCoverageCountries(prev => prev.filter(x => x !== c));
+        const showResults = contracting && coverageCountries.length > 0;
+        const hasCrossBorder = coverageCountries.some(c => CROSS_BORDER_SINGAPORE.has(c));
+
+        return (
+          <div style={{ minHeight: "100vh", background: "#0a0a0f", fontFamily: "'DM Sans', 'Segoe UI', sans-serif", color: "#e2e8f0", padding: "36px 24px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{ textAlign: "center", marginBottom: 36, maxWidth: 600 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#1a1a2e", border: "1px solid #2d2d4e", borderRadius: 20, padding: "4px 14px", marginBottom: 18, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "#818cf8" }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#818cf8", display: "inline-block" }} />
+                Powered by Airwallex
+              </div>
+              <h1 style={{ fontSize: 30, fontWeight: 700, margin: "0 0 8px", background: "linear-gradient(135deg, #f97316 0%, #fb923c 50%, #fdba74 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "-0.02em" }}>
+                Carrot Card Coverage
+              </h1>
+              <p style={{ color: "#94a3b8", fontSize: 14, margin: 0, lineHeight: 1.6 }}>Select a contracting country and one or more member countries to check issuing coverage</p>
+            </div>
+
+            <div style={{ width: "100%", maxWidth: 720, background: "#111118", border: "1px solid #1e1e30", borderRadius: 16, padding: 24, marginBottom: 24, boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
+              <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
+                <Combobox label="Customer Contracting Country" options={FEATURED_CONTRACTING} value={contracting} onChange={setContracting} placeholder="e.g. United Kingdom" />
+                <div style={{ display: "flex", alignItems: "center", paddingTop: 28, color: "#334155", fontSize: 18, flexShrink: 0 }}>→</div>
+                <CoverageTagInput selected={coverageCountries} onAdd={addCoverage} onRemove={removeCoverage} />
+              </div>
+              {coverageCountries.length > 0 && (
+                <div style={{ marginTop: 14, textAlign: "right" }}>
+                  <span onClick={() => setCoverageCountries([])} style={{ fontSize: 12, color: "#475569", cursor: "pointer", textDecoration: "underline" }}>Clear all countries</span>
+                </div>
+              )}
+            </div>
+
+            {showResults && (
+              <div style={{ width: "100%", maxWidth: 720, background: "#111118", border: "1px solid #1e1e30", borderRadius: 16, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.5)", marginBottom: 32 }}>
+                <SummaryBar contracting={contracting} coverageCountries={coverageCountries} />
+                <div>
+                  {coverageCountries.map((country, i) => (
+                    <ResultRow key={country} contracting={contracting} country={country} index={i} />
+                  ))}
+                </div>
+                {hasCrossBorder && (
+                  <div style={{ padding: "12px 18px", background: "rgba(245,158,11,0.06)", borderTop: "1px solid #2a1f00", fontSize: 12, color: "#92400e" }}>
+                    ⚠ Standard disclaimer: <em style={{ color: "#a16207" }}>"Availability and acceptance of the Carrot Card varies on a clinic-by-clinic basis due to clinic-level eligibility criteria and other international payment considerations."</em>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!showResults && (
+              <div style={{ color: "#334155", fontSize: 13, textAlign: "center", marginTop: 4, marginBottom: 32 }}>
+                {!contracting ? "Start by selecting a contracting country" : "Now add one or more member coverage countries"}
+              </div>
+            )}
+
+            <div style={{ width: "100%", maxWidth: 720 }}>
+              <h3 style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#475569", marginBottom: 12 }}>Coverage Tiers</h3>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {[
+                  { dot: "#22c55e", label: "Local Issuance", desc: "EEA + UK, CA, AU, SG, HK, IL, US. Issued by local Airwallex entity. Best acceptance." },
+                  { dot: "#f59e0b", label: "Cross-Border via Singapore", desc: "~30 markets in LatAm, MENA, SEA. Virtual cards only. Clinic acceptance varies." },
+                ].map(tier => (
+                  <div key={tier.label} style={{ flex: "1 1 200px", display: "flex", alignItems: "flex-start", gap: 10, background: "#111118", border: "1px solid #1e1e30", borderRadius: 10, padding: "12px 14px" }}>
+                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: tier.dot, marginTop: 4, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#cbd5e1", marginBottom: 3 }}>{tier.label}</div>
+                      <div style={{ fontSize: 11, color: "#64748b", lineHeight: 1.5 }}>{tier.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
