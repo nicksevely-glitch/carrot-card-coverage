@@ -123,6 +123,15 @@
         };
       }
 
+      function getDotColor(contractingCountry, coverageCountry) {
+        if (!contractingCountry) {
+          return LOCALLY_ISSUED.has(coverageCountry) ? "#22c55e" : "#f59e0b";
+        }
+        const result = getCoverageInfo(contractingCountry, coverageCountry);
+        if (!result) return "#64748b";
+        return result.status === "supported" ? "#22c55e" : "#f59e0b";
+      }
+
       const statusConfig = {
         supported:    { bg: "#0d2e1a", border: "#1a5c32", dot: "#22c55e", text: "#86efac", pill: "#14532d", pillLabel: "Ready" },
         kyc_required: { bg: "#2a1f00", border: "#5c3d00", dot: "#f59e0b", text: "#fcd34d", pill: "#78350f", pillLabel: "KYC Req'd" },
@@ -163,7 +172,7 @@
         );
       }
 
-      function CoverageTagInput({ selected, onAdd, onRemove }) {
+      function CoverageTagInput({ contracting, selected, onAdd, onRemove }) {
         const [query, setQuery] = useState("");
         const [open, setOpen] = useState(false);
         const inputRef = useRef(null);
@@ -177,7 +186,7 @@
             <div onClick={() => inputRef.current && inputRef.current.focus()}
               style={{ minHeight: 44, background: "#0d0d1a", border: `1px solid ${selected.length > 0 ? "#f97316" : "#2a2a40"}`, borderRadius: 8, padding: "6px 10px", display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", cursor: "text" }}>
               {selected.map(c => {
-                const dot = LOCALLY_ISSUED.has(c) ? "#22c55e" : "#f59e0b";
+                const dot = getDotColor(contracting, c);
                 return (
                   <span key={c} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#1a1a2e", border: "1px solid #2d2d4e", borderRadius: 6, padding: "2px 8px 2px 6px", fontSize: 12, color: "#cbd5e1", whiteSpace: "nowrap" }}>
                     <span style={{ width: 6, height: 6, borderRadius: "50%", background: dot, flexShrink: 0 }} />
@@ -197,7 +206,7 @@
                 {open && filtered.length > 0 && (
                   <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, minWidth: 220, zIndex: 200, background: "#111118", border: "1px solid #2a2a40", borderRadius: 8, maxHeight: 200, overflowY: "auto", boxShadow: "0 8px 32px rgba(0,0,0,0.7)" }}>
                     {filtered.map(c => {
-                      const dot = LOCALLY_ISSUED.has(c) ? "#22c55e" : "#f59e0b";
+                      const dot = getDotColor(contracting, c);
                       return (
                         <div key={c} onMouseDown={() => { onAdd(c); setQuery(""); }}
                           style={{ padding: "8px 12px", cursor: "pointer", fontSize: 13, borderBottom: "1px solid #1a1a28", display: "flex", alignItems: "center", gap: 8, color: "#e2e8f0" }}
@@ -289,7 +298,7 @@
               <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
                 <Combobox label="Customer Contracting Country" options={FEATURED_CONTRACTING} value={contracting} onChange={setContracting} placeholder="e.g. United Kingdom" />
                 <div style={{ display: "flex", alignItems: "center", paddingTop: 28, color: "#94a3b8", fontSize: 18, flexShrink: 0 }}>-></div>
-                <CoverageTagInput selected={coverageCountries} onAdd={addCoverage} onRemove={removeCoverage} />
+                <CoverageTagInput contracting={contracting} selected={coverageCountries} onAdd={addCoverage} onRemove={removeCoverage} />
               </div>
               {coverageCountries.length > 0 && (
                 <div style={{ marginTop: 14, textAlign: "right" }}>
