@@ -67,7 +67,6 @@
 
         const contractingIsEEA = EEA.has(contractingCountry);
         const coverageIsEEA = EEA.has(coverageCountry);
-        const contractingIsUK = contractingCountry === "United Kingdom";
 
         if (isLocallyIssued) {
           if (contractingCountry === coverageCountry) {
@@ -84,26 +83,26 @@
               status: "supported",
               label: "Local Issuance",
               issuingEntity: "Netherlands (EEA)",
-              detail: "Issued via Airwallex Netherlands. No additional KYC required — both countries are within the EEA program.",
+              detail: "Issued via Airwallex Netherlands. Both countries are within the EEA program — no additional KYC required.",
               kycNote: null,
             };
           }
-          if (contractingIsUK && coverageIsEEA) {
+          if (contractingIsEEA && !coverageIsEEA) {
             return {
               status: "supported",
               label: "Local Issuance",
-              issuingEntity: "Netherlands (EEA)",
-              detail: "Issued via Airwallex Netherlands.",
-              kycNote: "UK customer must complete Netherlands KYC to issue cards in EEA countries.",
+              issuingEntity: "Local Airwallex entity",
+              detail: `Issued locally in ${coverageCountry}.`,
+              kycNote: `Customer must complete ${coverageCountry} KYC in addition to their EEA (Netherlands) KYC.`,
             };
           }
-          if (!contractingIsEEA && !contractingIsUK && coverageIsEEA) {
+          if (!contractingIsEEA && coverageIsEEA) {
             return {
               status: "supported",
               label: "Local Issuance",
               issuingEntity: "Netherlands (EEA)",
               detail: "Issued via Airwallex Netherlands.",
-              kycNote: `Customer contracting via ${contractingCountry} must complete Netherlands KYC to issue cards in EEA countries.`,
+              kycNote: `Customer must complete Netherlands (EEA) KYC in addition to their ${contractingCountry} KYC.`,
             };
           }
           return {
@@ -111,21 +110,16 @@
             label: "Local Issuance",
             issuingEntity: "Local Airwallex entity",
             detail: `Issued locally in ${coverageCountry}.`,
-            kycNote: `Customer must complete local KYC for ${coverageCountry} in addition to their ${contractingCountry} KYC.`,
+            kycNote: `Customer must complete ${coverageCountry} KYC in addition to their ${contractingCountry} KYC.`,
           };
         }
-
-        const contractingIsLocal = LOCALLY_ISSUED.has(contractingCountry);
-        const kycMsg = contractingIsLocal
-          ? `Customer must complete Singapore KYC in addition to their ${contractingCountry} KYC.`
-          : "Customer must complete Singapore KYC.";
 
         return {
           status: "conditional",
           label: "Cross-Border (via SG)",
           issuingEntity: "Singapore",
-          detail: "Virtual cards only. Clinic acceptance may vary.",
-          kycNote: kycMsg,
+          detail: "Virtual cards only.",
+          kycNote: `Customer must complete Singapore KYC in addition to their ${contractingCountry} KYC.`,
         };
       }
 
@@ -323,8 +317,8 @@
               <h3 style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 12 }}>Coverage Tiers</h3>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 {[
-                  { dot: "#22c55e", label: "Local Issuance", desc: "EEA countries (via Netherlands), plus UK, Canada, Australia, Singapore, Hong Kong, Israel, and US. Issued by local Airwallex entity. Best acceptance." },
-                  { dot: "#f59e0b", label: "Cross-Border via Singapore", desc: "Around 30 markets including Brazil, Mexico, UAE, Malaysia, Philippines and others. Virtual cards only. Additional Singapore KYC required. Clinic acceptance varies." },
+                  { dot: "#22c55e", label: "Local Issuance", desc: "EEA countries (via Netherlands), plus UK, Canada, Australia, Singapore, Hong Kong, Israel, and US. Issued by local Airwallex entity." },
+                  { dot: "#f59e0b", label: "Cross-Border via Singapore", desc: "Around 30 markets including Brazil, Mexico, UAE, Malaysia, Philippines and others. Virtual cards only. Additional Singapore KYC required." },
                 ].map(tier => (
                   <div key={tier.label} style={{ flex: "1 1 200px", display: "flex", alignItems: "flex-start", gap: 10, background: "#111118", border: "1px solid #1e1e30", borderRadius: 10, padding: "12px 14px" }}>
                     <div style={{ width: 7, height: 7, borderRadius: "50%", background: tier.dot, marginTop: 4, flexShrink: 0 }} />
