@@ -10,7 +10,7 @@
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { background: #0a0a0f; }
-      input::placeholder { color: #334155; }
+      input::placeholder { color: #64748b; }
       ::-webkit-scrollbar { width: 4px; }
       ::-webkit-scrollbar-track { background: transparent; }
       ::-webkit-scrollbar-thumb { background: #2a2a40; border-radius: 4px; }
@@ -100,7 +100,7 @@
         );
         return (
           <div style={{ position: "relative", flex: "1 1 200px" }}>
-            <label style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "#64748b", display: "block", marginBottom: 7 }}>{label}</label>
+            <label style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "#94a3b8", display: "block", marginBottom: 7 }}>{label}</label>
             <input
               value={query}
               onChange={e => { setQuery(e.target.value); onChange(""); setOpen(true); }}
@@ -134,7 +134,7 @@
         );
         return (
           <div style={{ flex: "1 1 280px" }}>
-            <label style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "#64748b", display: "block", marginBottom: 7 }}>Member Coverage Countries</label>
+            <label style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "#94a3b8", display: "block", marginBottom: 7 }}>Member Coverage Countries</label>
             <div onClick={() => inputRef.current && inputRef.current.focus()}
               style={{ minHeight: 44, background: "#0d0d1a", border: `1px solid ${selected.length > 0 ? "#f97316" : "#2a2a40"}`, borderRadius: 8, padding: "6px 10px", display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", cursor: "text" }}>
               {selected.map(c => {
@@ -143,7 +143,7 @@
                   <span key={c} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#1a1a2e", border: "1px solid #2d2d4e", borderRadius: 6, padding: "2px 8px 2px 6px", fontSize: 12, color: "#cbd5e1", whiteSpace: "nowrap" }}>
                     <span style={{ width: 6, height: 6, borderRadius: "50%", background: dot, flexShrink: 0 }} />
                     {c}
-                    <span onMouseDown={e => { e.preventDefault(); onRemove(c); }} style={{ marginLeft: 2, cursor: "pointer", color: "#475569", fontSize: 14, lineHeight: 1 }}>×</span>
+                    <span onMouseDown={e => { e.preventDefault(); onRemove(c); }} style={{ marginLeft: 2, cursor: "pointer", color: "#94a3b8", fontSize: 14, lineHeight: 1 }}>×</span>
                   </span>
                 );
               })}
@@ -189,9 +189,9 @@
               <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 4 }}>
                 <span style={{ width: 7, height: 7, borderRadius: "50%", background: sc.dot, boxShadow: `0 0 6px ${sc.dot}`, flexShrink: 0 }} />
                 <span style={{ fontSize: 12, fontWeight: 600, color: sc.text }}>{result.label}</span>
-                {result.issuingEntity && <span style={{ fontSize: 11, color: "#475569" }}>· via {result.issuingEntity}</span>}
+                {result.issuingEntity && <span style={{ fontSize: 11, color: "#94a3b8" }}>· via {result.issuingEntity}</span>}
               </div>
-              <div style={{ fontSize: 12, color: "#64748b", lineHeight: 1.5 }}>
+              <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.5 }}>
                 {result.detail}
                 {result.kycNote && <span style={{ color: "#92400e", marginLeft: 6 }}>⚠ {result.kycNote}</span>}
               </div>
@@ -218,7 +218,7 @@
           <div style={{ display: "flex", gap: 14, padding: "12px 18px", background: "#0d0d1a", borderBottom: "1px solid #1a1a26", flexWrap: "wrap", alignItems: "center" }}>
             {counts.supported > 0 && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#94a3b8" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e" }} /><strong style={{ color: "#e2e8f0" }}>{counts.supported}</strong> Local issuance</div>}
             {counts.conditional > 0 && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#94a3b8" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "#f59e0b" }} /><strong style={{ color: "#e2e8f0" }}>{counts.conditional}</strong> Cross-border</div>}
-            <div style={{ marginLeft: "auto", fontSize: 12, color: "#475569" }}>{total} countr{total === 1 ? "y" : "ies"}</div>
+            <div style={{ marginLeft: "auto", fontSize: 12, color: "#94a3b8" }}>{total} countr{total === 1 ? "y" : "ies"}</div>
           </div>
         );
       }
@@ -247,12 +247,12 @@
             <div style={{ width: "100%", maxWidth: 720, background: "#111118", border: "1px solid #1e1e30", borderRadius: 16, padding: 24, marginBottom: 24, boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
               <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
                 <Combobox label="Customer Contracting Country" options={FEATURED_CONTRACTING} value={contracting} onChange={setContracting} placeholder="e.g. United Kingdom" />
-                <div style={{ display: "flex", alignItems: "center", paddingTop: 28, color: "#334155", fontSize: 18, flexShrink: 0 }}>→</div>
+                <div style={{ display: "flex", alignItems: "center", paddingTop: 28, color: "#94a3b8", fontSize: 18, flexShrink: 0 }}>→</div>
                 <CoverageTagInput selected={coverageCountries} onAdd={addCoverage} onRemove={removeCoverage} />
               </div>
               {coverageCountries.length > 0 && (
                 <div style={{ marginTop: 14, textAlign: "right" }}>
-                  <span onClick={() => setCoverageCountries([])} style={{ fontSize: 12, color: "#475569", cursor: "pointer", textDecoration: "underline" }}>Clear all countries</span>
+                  <span onClick={() => setCoverageCountries([])} style={{ fontSize: 12, color: "#94a3b8", cursor: "pointer", textDecoration: "underline" }}>Clear all countries</span>
                 </div>
               )}
             </div>
@@ -274,13 +274,13 @@
             )}
 
             {!showResults && (
-              <div style={{ color: "#334155", fontSize: 13, textAlign: "center", marginTop: 4, marginBottom: 32 }}>
+              <div style={{ color: "#94a3b8", fontSize: 13, textAlign: "center", marginTop: 4, marginBottom: 32 }}>
                 {!contracting ? "Start by selecting a contracting country" : "Now add one or more member coverage countries"}
               </div>
             )}
 
             <div style={{ width: "100%", maxWidth: 720 }}>
-              <h3 style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#475569", marginBottom: 12 }}>Coverage Tiers</h3>
+              <h3 style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 12 }}>Coverage Tiers</h3>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 {[
                   { dot: "#22c55e", label: "Local Issuance", desc: "EEA + UK, CA, AU, SG, HK, IL, US. Issued by local Airwallex entity. Best acceptance." },
@@ -290,7 +290,7 @@
                     <div style={{ width: 7, height: 7, borderRadius: "50%", background: tier.dot, marginTop: 4, flexShrink: 0 }} />
                     <div>
                       <div style={{ fontSize: 12, fontWeight: 600, color: "#cbd5e1", marginBottom: 3 }}>{tier.label}</div>
-                      <div style={{ fontSize: 11, color: "#64748b", lineHeight: 1.5 }}>{tier.desc}</div>
+                      <div style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.5 }}>{tier.desc}</div>
                     </div>
                   </div>
                 ))}
