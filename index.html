@@ -1,4 +1,4 @@
-Quick update — just two things changing: the pill label from "Ready" to "No Add. KYC" and the legend label and summary bar from "Ready" to "No Additional KYC". Same steps to update GitHub — repo → `index.html` → pencil → **Cmd + A** → paste → commit:
+Here's the full updated file — select all and paste:
 
 ```html
 <!DOCTYPE html>
@@ -35,7 +35,7 @@ Quick update — just two things changing: the pill label from "Ready" to "No Ad
       ]);
 
       const CROSS_BORDER_SINGAPORE = new Set([
-        "Mexico","Brazil","New Zealand","Malaysia","UAE","Philippines","Thailand",
+        "Mexico","Brazil","New Zealand","Malaysia","United Arab Emirates","Philippines","Thailand",
         "Argentina","Colombia","Chile","Turkey","Costa Rica","Egypt","Peru",
         "Dominican Republic","Ecuador","Georgia","Bosnia & Herzegovina","Belarus",
         "Ghana","Paraguay","Montenegro","Uzbekistan","Uganda","Kazakhstan",
@@ -50,24 +50,44 @@ Quick update — just two things changing: the pill label from "Ready" to "No Ad
         "Norway","Switzerland"
       ]);
 
-      const FEATURED_CONTRACTING = [
-        "United Kingdom","Canada","Germany","France","Ireland","Netherlands",
-        "Sweden","Spain","Italy","Switzerland","Belgium","Denmark","Norway",
-        "Finland","Austria","Poland","Portugal","Australia","Singapore",
-        "Hong Kong","Israel","United States",
-      ];
-
-      const ALL_COVERAGE_COUNTRIES = [
-        ...Array.from(LOCALLY_ISSUED),
-        ...Array.from(CROSS_BORDER_SINGAPORE),
-      ].filter((v, i, a) => a.indexOf(v) === i).sort();
+      const ALL_WORLD_COUNTRIES = [
+        "Afghanistan","Albania","Algeria","Andorra","Angola","Argentina","Armenia",
+        "Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados",
+        "Belarus","Belgium","Belize","Benin","Bolivia","Bosnia & Herzegovina","Botswana",
+        "Brazil","Bulgaria","Cambodia","Cameroon","Canada","Chile","China","Colombia",
+        "Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Denmark",
+        "Dominican Republic","Ecuador","Egypt","El Salvador","Estonia","Ethiopia",
+        "Finland","France","Georgia","Germany","Ghana","Greece","Guatemala",
+        "Honduras","Hong Kong","Hungary","Iceland","India","Indonesia","Iraq","Ireland",
+        "Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kuwait",
+        "Kyrgyzstan","Latvia","Lebanon","Liechtenstein","Lithuania","Luxembourg",
+        "Malaysia","Malta","Mexico","Moldova","Montenegro","Morocco","Myanmar",
+        "Nepal","Netherlands","New Zealand","Nicaragua","Nigeria","Norway","Oman",
+        "Pakistan","Panama","Paraguay","Peru","Philippines","Poland","Portugal",
+        "Qatar","Romania","Russia","Rwanda","Saudi Arabia","Senegal","Serbia",
+        "Singapore","Slovakia","Slovenia","South Africa","South Korea","Spain",
+        "Sri Lanka","Sweden","Switzerland","Taiwan","Thailand","Trinidad & Tobago",
+        "Tunisia","Turkey","Uganda","Ukraine","United Arab Emirates","United Kingdom",
+        "United States","Uruguay","Uzbekistan","Venezuela","Vietnam","Zambia","Zimbabwe",
+      ].sort();
 
       function getCoverageInfo(contractingCountry, coverageCountry) {
         if (!contractingCountry || !coverageCountry) return null;
+
         const isLocallyIssued = LOCALLY_ISSUED.has(coverageCountry);
         const isCrossBorder = CROSS_BORDER_SINGAPORE.has(coverageCountry);
-        if (!isLocallyIssued && !isCrossBorder) return null;
 
+        if (!isLocallyIssued && !isCrossBorder) {
+          return {
+            status: "not_supported",
+            label: "Not Supported",
+            issuingEntity: null,
+            detail: `${coverageCountry} is not currently supported by Airwallex card issuance.`,
+            kycNote: null,
+          };
+        }
+
+        const contractingIsLocallyIssued = LOCALLY_ISSUED.has(contractingCountry);
         const contractingIsEEA = EEA.has(contractingCountry);
         const coverageIsEEA = EEA.has(coverageCountry);
 
@@ -77,7 +97,7 @@ Quick update — just two things changing: the pill label from "Ready" to "No Ad
               status: "supported",
               label: "Local Issuance",
               issuingEntity: coverageIsEEA ? "Netherlands (EEA)" : "Local Airwallex entity",
-              detail: "Issued locally. No additional KYC required.",
+              detail: "Customer has entity here. Issued locally. No additional KYC required.",
               kycNote: null,
             };
           }
@@ -86,59 +106,65 @@ Quick update — just two things changing: the pill label from "Ready" to "No Ad
               status: "supported",
               label: "Local Issuance",
               issuingEntity: "Netherlands (EEA)",
-              detail: "Issued via Airwallex Netherlands. Both countries are within the EEA program — no additional KYC required.",
+              detail: "Both within EEA. Issued via Airwallex Netherlands. No additional KYC required.",
               kycNote: null,
             };
           }
-          if (contractingIsEEA && !coverageIsEEA) {
+          if (!contractingIsLocallyIssued) {
             return {
-              status: "kyc_required",
-              label: "Local Issuance",
-              issuingEntity: "Local Airwallex entity",
-              detail: `Issued locally in ${coverageCountry}.`,
-              kycNote: `Customer must complete ${coverageCountry} KYC in addition to their EEA (Netherlands) KYC.`,
+              status: "not_eligible",
+              label: "Not Eligible",
+              issuingEntity: null,
+              detail: `Local issuance in ${coverageCountry} requires a business entity in ${coverageCountry}.`,
+              kycNote: `An entity in ${contractingCountry} does not satisfy the local entity requirement.`,
             };
           }
-          if (!contractingIsEEA && coverageIsEEA) {
-            return {
-              status: "kyc_required",
-              label: "Local Issuance",
-              issuingEntity: "Netherlands (EEA)",
-              detail: "Issued via Airwallex Netherlands.",
-              kycNote: `Customer must complete Netherlands (EEA) KYC in addition to their ${contractingCountry} KYC.`,
-            };
-          }
+          const targetKYC = coverageIsEEA ? "Netherlands (EEA)" : coverageCountry;
           return {
             status: "kyc_required",
             label: "Local Issuance",
-            issuingEntity: "Local Airwallex entity",
-            detail: `Issued locally in ${coverageCountry}.`,
-            kycNote: `Customer must complete ${coverageCountry} KYC in addition to their ${contractingCountry} KYC.`,
+            issuingEntity: coverageIsEEA ? "Netherlands (EEA)" : "Local Airwallex entity",
+            detail: `Requires a separate business entity in ${coverageCountry}.`,
+            kycNote: `Customer must complete ${targetKYC} KYC in addition to their ${contractingCountry} KYC.`,
           };
         }
 
+        if (!contractingIsLocallyIssued) {
+          return {
+            status: "not_eligible",
+            label: "Not Eligible",
+            issuingEntity: null,
+            detail: "Singapore cross-border issuance requires an entity anchor in a locally-issued country or EEA.",
+            kycNote: `An entity in ${contractingCountry} does not qualify — it is only a cross-border country.`,
+          };
+        }
         return {
           status: "conditional",
           label: "Cross-Border (via SG)",
           issuingEntity: "Singapore",
-          detail: "Virtual cards only.",
-          kycNote: `Customer must complete Singapore KYC in addition to their ${contractingCountry} KYC.`,
+          detail: "Virtual cards only. No Singapore entity required.",
+          kycNote: `Customer must complete Singapore KYC. Their ${contractingCountry} entity satisfies the anchor requirement.`,
         };
       }
 
       function getDotColor(contractingCountry, coverageCountry) {
         if (!contractingCountry) {
-          return LOCALLY_ISSUED.has(coverageCountry) ? "#22c55e" : "#f59e0b";
+          if (LOCALLY_ISSUED.has(coverageCountry)) return "#22c55e";
+          if (CROSS_BORDER_SINGAPORE.has(coverageCountry)) return "#f59e0b";
+          return "#64748b";
         }
         const result = getCoverageInfo(contractingCountry, coverageCountry);
         if (!result) return "#64748b";
-        return result.status === "supported" ? "#22c55e" : "#f59e0b";
+        const colors = { supported: "#22c55e", kyc_required: "#f59e0b", conditional: "#f59e0b", not_supported: "#64748b", not_eligible: "#ef4444" };
+        return colors[result.status] || "#64748b";
       }
 
       const statusConfig = {
-        supported:    { bg: "#0d2e1a", border: "#1a5c32", dot: "#22c55e", text: "#86efac", pill: "#14532d", pillLabel: "No Add. KYC" },
-        kyc_required: { bg: "#2a1f00", border: "#5c3d00", dot: "#f59e0b", text: "#fcd34d", pill: "#78350f", pillLabel: "KYC Req'd" },
-        conditional:  { bg: "#2a1f00", border: "#5c3d00", dot: "#f59e0b", text: "#fcd34d", pill: "#78350f", pillLabel: "Cond." },
+        supported:     { dot: "#22c55e", text: "#86efac", pill: "#14532d", pillLabel: "No Add. KYC" },
+        kyc_required:  { dot: "#f59e0b", text: "#fcd34d", pill: "#78350f", pillLabel: "KYC Req'd" },
+        conditional:   { dot: "#f59e0b", text: "#fcd34d", pill: "#78350f", pillLabel: "Cond." },
+        not_supported: { dot: "#64748b", text: "#94a3b8", pill: "#1e293b", pillLabel: "Not Supported" },
+        not_eligible:  { dot: "#ef4444", text: "#fca5a5", pill: "#7f1d1d", pillLabel: "Not Eligible" },
       };
 
       function Combobox({ label, options, value, onChange, placeholder }) {
@@ -180,7 +206,7 @@ Quick update — just two things changing: the pill label from "Ready" to "No Ad
         const [open, setOpen] = useState(false);
         const inputRef = useRef(null);
         const filtered = useMemo(() =>
-          ALL_COVERAGE_COUNTRIES.filter(c => c.toLowerCase().includes(query.toLowerCase()) && !selected.includes(c)).slice(0, 80),
+          ALL_WORLD_COUNTRIES.filter(c => c.toLowerCase().includes(query.toLowerCase()) && !selected.includes(c)).slice(0, 80),
           [query, selected]
         );
         return (
@@ -232,7 +258,7 @@ Quick update — just two things changing: the pill label from "Ready" to "No Ad
       function ResultRow({ contracting, country, index }) {
         const result = getCoverageInfo(contracting, country);
         if (!result) return null;
-        const sc = statusConfig[result.status];
+        const sc = statusConfig[result.status] || statusConfig.not_supported;
         return (
           <div style={{ display: "grid", gridTemplateColumns: "160px 1fr auto", alignItems: "start", gap: 16, padding: "14px 18px", background: index % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent", borderBottom: "1px solid #1a1a26", animation: "fadeIn 0.2s ease" }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0", paddingTop: 1 }}>{country}</div>
@@ -244,8 +270,8 @@ Quick update — just two things changing: the pill label from "Ready" to "No Ad
               </div>
               <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.5 }}>{result.detail}</div>
               {result.kycNote && (
-                <div style={{ fontSize: 12, color: "#fcd34d", marginTop: 5, background: "rgba(245,158,11,0.08)", borderRadius: 6, padding: "4px 8px", display: "inline-block" }}>
-                  KYC: {result.kycNote}
+                <div style={{ fontSize: 12, color: sc.text, marginTop: 5, background: "rgba(255,255,255,0.05)", borderRadius: 6, padding: "4px 8px", display: "inline-block" }}>
+                  {result.kycNote}
                 </div>
               )}
             </div>
@@ -258,7 +284,7 @@ Quick update — just two things changing: the pill label from "Ready" to "No Ad
 
       function SummaryBar({ contracting, coverageCountries }) {
         const counts = useMemo(() => {
-          const c = { supported: 0, kyc_required: 0, conditional: 0 };
+          const c = { supported: 0, kyc_required: 0, conditional: 0, not_supported: 0, not_eligible: 0 };
           coverageCountries.forEach(country => {
             const r = getCoverageInfo(contracting, country);
             if (r) c[r.status] = (c[r.status] || 0) + 1;
@@ -271,7 +297,9 @@ Quick update — just two things changing: the pill label from "Ready" to "No Ad
           <div style={{ display: "flex", gap: 14, padding: "12px 18px", background: "#0d0d1a", borderBottom: "1px solid #1a1a26", flexWrap: "wrap", alignItems: "center" }}>
             {counts.supported > 0 && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#94a3b8" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e" }} /><strong style={{ color: "#e2e8f0" }}>{counts.supported}</strong> No Additional KYC</div>}
             {counts.kyc_required > 0 && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#94a3b8" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "#f59e0b" }} /><strong style={{ color: "#e2e8f0" }}>{counts.kyc_required}</strong> KYC Required</div>}
-            {counts.conditional > 0 && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#94a3b8" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "#f59e0b" }} /><strong style={{ color: "#e2e8f0" }}>{counts.conditional}</strong> Cross-border</div>}
+            {counts.conditional > 0 && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#94a3b8" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "#f59e0b" }} /><strong style={{ color: "#e2e8f0" }}>{counts.conditional}</strong> Cross-Border</div>}
+            {counts.not_eligible > 0 && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#94a3b8" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "#ef4444" }} /><strong style={{ color: "#e2e8f0" }}>{counts.not_eligible}</strong> Not Eligible</div>}
+            {counts.not_supported > 0 && <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#94a3b8" }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: "#64748b" }} /><strong style={{ color: "#e2e8f0" }}>{counts.not_supported}</strong> Not Supported</div>}
             <div style={{ marginLeft: "auto", fontSize: 12, color: "#94a3b8" }}>{total} countr{total === 1 ? "y" : "ies"}</div>
           </div>
         );
@@ -299,7 +327,7 @@ Quick update — just two things changing: the pill label from "Ready" to "No Ad
 
             <div style={{ width: "100%", maxWidth: 720, background: "#111118", border: "1px solid #1e1e30", borderRadius: 16, padding: 24, marginBottom: 24, boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
               <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
-                <Combobox label="Customer Contracting Country" options={FEATURED_CONTRACTING} value={contracting} onChange={setContracting} placeholder="e.g. United Kingdom" />
+                <Combobox label="Customer Contracting Country" options={ALL_WORLD_COUNTRIES} value={contracting} onChange={setContracting} placeholder="e.g. United Kingdom" />
                 <div style={{ display: "flex", alignItems: "center", paddingTop: 28, color: "#94a3b8", fontSize: 18, flexShrink: 0 }}>-></div>
                 <CoverageTagInput contracting={contracting} selected={coverageCountries} onAdd={addCoverage} onRemove={removeCoverage} />
               </div>
@@ -331,8 +359,10 @@ Quick update — just two things changing: the pill label from "Ready" to "No Ad
               <h3 style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 12 }}>Coverage Tiers</h3>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 {[
-                  { dot: "#22c55e", label: "No Additional KYC", desc: "Same country, or both within EEA. No additional KYC required beyond standard onboarding." },
-                  { dot: "#f59e0b", label: "KYC Required / Conditional", desc: "Coverage is possible but additional KYC is needed." },
+                  { dot: "#22c55e", label: "No Additional KYC", desc: "Same country, or both within EEA. Customer already has the required entity and KYC." },
+                  { dot: "#f59e0b", label: "KYC Required / Conditional", desc: "Coverage possible but requires an additional entity and/or KYC in that region." },
+                  { dot: "#ef4444", label: "Not Eligible", desc: "Customer's contracting entity does not satisfy the anchor requirement for this coverage." },
+                  { dot: "#64748b", label: "Not Supported", desc: "Country is not currently supported by Airwallex card issuance." },
                 ].map(tier => (
                   <div key={tier.label} style={{ flex: "1 1 200px", display: "flex", alignItems: "flex-start", gap: 10, background: "#111118", border: "1px solid #1e1e30", borderRadius: 10, padding: "12px 14px" }}>
                     <div style={{ width: 7, height: 7, borderRadius: "50%", background: tier.dot, marginTop: 4, flexShrink: 0 }} />
