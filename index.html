@@ -1,5 +1,3 @@
-Here's the full updated file — select all and paste:
-
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -14,6 +12,7 @@ Here's the full updated file — select all and paste:
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { background: #0a0a0f; }
       input::placeholder { color: #64748b; }
+      select option { background: #111118; color: #e2e8f0; }
       ::-webkit-scrollbar { width: 4px; }
       ::-webkit-scrollbar-track { background: transparent; }
       ::-webkit-scrollbar-thumb { background: #2a2a40; border-radius: 4px; }
@@ -47,55 +46,77 @@ Here's the full updated file — select all and paste:
         "Estonia","Finland","France","Germany","Greece","Hungary","Ireland","Italy",
         "Latvia","Lithuania","Luxembourg","Malta","Netherlands","Poland","Portugal",
         "Romania","Slovakia","Slovenia","Spain","Sweden","Iceland","Liechtenstein",
-        "Norway","Switzerland"
+        "Norway","Switzerland",
       ]);
 
+      const HIGH_RISK_INDUSTRIES = [
+        "Adult Content & Related Services",
+        "Gambling Services & Games of Skill",
+        "Illegal Drugs & Controlled Substances",
+        "Counterfeit or Unauthorised Goods",
+        "Weapons Manufacturing, Sales, & Supplies",
+        "Payday & Predatory Lending",
+        "Hate Speech & Discrimination",
+        "Ponzi / Pyramid Scheme / Multi Level Marketing / Telemarketing",
+        "Sale, Distribution, & Trade of Endangered Animal Species",
+        "Sale, Distribution, & Trade of Archaeological and Cultural Relics",
+        "Sale of Access to Cyberlockers or Remote Digital File-Sharing Services",
+        "Human Remains and Body Parts",
+        "Transactions Made for No Genuine Commercial Purpose",
+        "Offering of Regulated Financial Services",
+        "Sale and Distribution of Unlicensed Products or Services",
+        "Other Businesses or Transactions Outside of Our Risk Appetite",
+      ];
+
       const ALL_WORLD_COUNTRIES = [
-        "Afghanistan","Albania","Algeria","Andorra","Angola","Argentina","Armenia",
-        "Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados",
-        "Belarus","Belgium","Belize","Benin","Bolivia","Bosnia & Herzegovina","Botswana",
-        "Brazil","Bulgaria","Cambodia","Cameroon","Canada","Chile","China","Colombia",
-        "Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Denmark",
-        "Dominican Republic","Ecuador","Egypt","El Salvador","Estonia","Ethiopia",
-        "Finland","France","Georgia","Germany","Ghana","Greece","Guatemala",
-        "Honduras","Hong Kong","Hungary","Iceland","India","Indonesia","Iraq","Ireland",
-        "Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kuwait",
-        "Kyrgyzstan","Latvia","Lebanon","Liechtenstein","Lithuania","Luxembourg",
-        "Malaysia","Malta","Mexico","Moldova","Montenegro","Morocco","Myanmar",
-        "Nepal","Netherlands","New Zealand","Nicaragua","Nigeria","Norway","Oman",
-        "Pakistan","Panama","Paraguay","Peru","Philippines","Poland","Portugal",
-        "Qatar","Romania","Russia","Rwanda","Saudi Arabia","Senegal","Serbia",
-        "Singapore","Slovakia","Slovenia","South Africa","South Korea","Spain",
-        "Sri Lanka","Sweden","Switzerland","Taiwan","Thailand","Trinidad & Tobago",
-        "Tunisia","Turkey","Uganda","Ukraine","United Arab Emirates","United Kingdom",
-        "United States","Uruguay","Uzbekistan","Venezuela","Vietnam","Zambia","Zimbabwe",
+        "Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda",
+        "Argentina","Armenia","Australia","Austria","Azerbaijan","Bahamas","Bahrain",
+        "Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia",
+        "Bosnia & Herzegovina","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso",
+        "Burundi","Cabo Verde","Cambodia","Cameroon","Canada","Central African Republic",
+        "Chad","Chile","China","Colombia","Comoros","Congo","Costa Rica","Croatia","Cuba",
+        "Cyprus","Czech Republic","Denmark","Djibouti","Dominica","Dominican Republic",
+        "Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini",
+        "Ethiopia","Fiji","Finland","France","Gabon","Gambia","Georgia","Germany","Ghana",
+        "Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras",
+        "Hong Kong","Hungary","Iceland","India","Indonesia","Iraq","Ireland","Israel",
+        "Italy","Ivory Coast","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati",
+        "Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya",
+        "Liechtenstein","Lithuania","Luxembourg","Madagascar","Malawi","Malaysia",
+        "Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico",
+        "Micronesia","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique",
+        "Myanmar","Namibia","Nauru","Nepal","Netherlands","New Zealand","Nicaragua",
+        "Niger","Nigeria","North Korea","North Macedonia","Norway","Oman","Pakistan",
+        "Palau","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland",
+        "Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts and Nevis",
+        "Saint Lucia","Saint Vincent and the Grenadines","Samoa","San Marino",
+        "Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore",
+        "Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Korea",
+        "South Sudan","Spain","Sri Lanka","Sudan","Suriname","Sweden","Switzerland",
+        "Syria","Taiwan","Tajikistan","Tanzania","Thailand","Timor-Leste","Togo","Tonga",
+        "Trinidad & Tobago","Tunisia","Turkey","Turkmenistan","Tuvalu","Uganda","Ukraine",
+        "United Arab Emirates","United Kingdom","United States","Uruguay","Uzbekistan",
+        "Vanuatu","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe",
       ].sort();
 
       function getCoverageInfo(contractingCountry, coverageCountry) {
         if (!contractingCountry || !coverageCountry) return null;
-
         const isLocallyIssued = LOCALLY_ISSUED.has(coverageCountry);
         const isCrossBorder = CROSS_BORDER_SINGAPORE.has(coverageCountry);
-
         if (!isLocallyIssued && !isCrossBorder) {
           return {
-            status: "not_supported",
-            label: "Not Supported",
-            issuingEntity: null,
+            status: "not_supported", label: "Not Supported", issuingEntity: null,
             detail: `${coverageCountry} is not currently supported by Airwallex card issuance.`,
             kycNote: null,
           };
         }
-
         const contractingIsLocallyIssued = LOCALLY_ISSUED.has(contractingCountry);
         const contractingIsEEA = EEA.has(contractingCountry);
         const coverageIsEEA = EEA.has(coverageCountry);
-
         if (isLocallyIssued) {
           if (contractingCountry === coverageCountry) {
             return {
-              status: "supported",
-              label: "Local Issuance",
+              status: "supported", label: "Local Issuance",
               issuingEntity: coverageIsEEA ? "Netherlands (EEA)" : "Local Airwallex entity",
               detail: "Customer has entity here. Issued locally. No additional KYC required.",
               kycNote: null,
@@ -103,45 +124,35 @@ Here's the full updated file — select all and paste:
           }
           if (contractingIsEEA && coverageIsEEA) {
             return {
-              status: "supported",
-              label: "Local Issuance",
-              issuingEntity: "Netherlands (EEA)",
+              status: "supported", label: "Local Issuance", issuingEntity: "Netherlands (EEA)",
               detail: "Both within EEA. Issued via Airwallex Netherlands. No additional KYC required.",
               kycNote: null,
             };
           }
           if (!contractingIsLocallyIssued) {
             return {
-              status: "not_eligible",
-              label: "Not Eligible",
-              issuingEntity: null,
+              status: "not_eligible", label: "Not Eligible", issuingEntity: null,
               detail: `Local issuance in ${coverageCountry} requires a business entity in ${coverageCountry}.`,
               kycNote: `An entity in ${contractingCountry} does not satisfy the local entity requirement.`,
             };
           }
           const targetKYC = coverageIsEEA ? "Netherlands (EEA)" : coverageCountry;
           return {
-            status: "kyc_required",
-            label: "Local Issuance",
+            status: "kyc_required", label: "Local Issuance",
             issuingEntity: coverageIsEEA ? "Netherlands (EEA)" : "Local Airwallex entity",
             detail: `Requires a separate business entity in ${coverageCountry}.`,
             kycNote: `Customer must complete ${targetKYC} KYC in addition to their ${contractingCountry} KYC.`,
           };
         }
-
         if (!contractingIsLocallyIssued) {
           return {
-            status: "not_eligible",
-            label: "Not Eligible",
-            issuingEntity: null,
+            status: "not_eligible", label: "Not Eligible", issuingEntity: null,
             detail: "Singapore cross-border issuance requires an entity anchor in a locally-issued country or EEA.",
             kycNote: `An entity in ${contractingCountry} does not qualify — it is only a cross-border country.`,
           };
         }
         return {
-          status: "conditional",
-          label: "Cross-Border (via SG)",
-          issuingEntity: "Singapore",
+          status: "conditional", label: "Cross-Border (via SG)", issuingEntity: "Singapore",
           detail: "Virtual cards only. No Singapore entity required.",
           kycNote: `Customer must complete Singapore KYC. Their ${contractingCountry} entity satisfies the anchor requirement.`,
         };
@@ -305,9 +316,40 @@ Here's the full updated file — select all and paste:
         );
       }
 
+      function TimelineNote({ contracting, coverageCountries, industry }) {
+        const kycRegions = useMemo(() => {
+          const regions = new Set();
+          coverageCountries.forEach(country => {
+            const r = getCoverageInfo(contracting, country);
+            if (!r) return;
+            if (r.status === "kyc_required") regions.add(EEA.has(country) ? "Netherlands (EEA)" : country);
+            if (r.status === "conditional") regions.add("Singapore");
+          });
+          return regions.size;
+        }, [contracting, coverageCountries]);
+
+        const base = { width: "100%", maxWidth: 720, borderRadius: 12, padding: "14px 18px", marginBottom: 24, fontSize: 13, lineHeight: 1.7 };
+
+        if (industry) {
+          return (
+            <div style={{ ...base, background: "#2e1a00", border: "1px solid #92400e", color: "#fcd34d" }}>
+              <strong>Additional Review Required</strong> — This customer operates in a restricted industry (<em>{industry}</em>) and will need to undergo additional review. We don't have a distinct timeline for completion.
+            </div>
+          );
+        }
+
+        return (
+          <div style={{ ...base, background: "#0d1a2e", border: "1px solid #1e3a5c", color: "#93c5fd" }}>
+            Onboarding with Airwallex typically takes <strong>1–2 weeks</strong>.
+            {kycRegions > 1 && <span> Multiple KYC processes ({kycRegions} regions) can be completed <strong>in parallel</strong>.</span>}
+          </div>
+        );
+      }
+
       function App() {
         const [contracting, setContracting] = useState("");
         const [coverageCountries, setCoverageCountries] = useState([]);
+        const [industry, setIndustry] = useState("");
         const addCoverage = (c) => setCoverageCountries(prev => prev.includes(c) ? prev : [...prev, c]);
         const removeCoverage = (c) => setCoverageCountries(prev => prev.filter(x => x !== c));
         const showResults = contracting && coverageCountries.length > 0;
@@ -327,7 +369,7 @@ Here's the full updated file — select all and paste:
 
             <div style={{ width: "100%", maxWidth: 720, background: "#111118", border: "1px solid #1e1e30", borderRadius: 16, padding: 24, marginBottom: 24, boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
               <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
-                <Combobox label="Customer Contracting Country" ALL_WORLD_COUNTRIES.filter(...) value={contracting} onChange={setContracting} placeholder="e.g. United Kingdom" />
+                <Combobox label="Customer Contracting Country" options={ALL_WORLD_COUNTRIES} value={contracting} onChange={setContracting} placeholder="e.g. United Kingdom" />
                 <div style={{ display: "flex", alignItems: "center", paddingTop: 28, color: "#94a3b8", fontSize: 18, flexShrink: 0 }}>-></div>
                 <CoverageTagInput contracting={contracting} selected={coverageCountries} onAdd={addCoverage} onRemove={removeCoverage} />
               </div>
@@ -336,7 +378,22 @@ Here's the full updated file — select all and paste:
                   <span onClick={() => setCoverageCountries([])} style={{ fontSize: 12, color: "#94a3b8", cursor: "pointer", textDecoration: "underline" }}>Clear all countries</span>
                 </div>
               )}
+              <div style={{ marginTop: 20 }}>
+                <label style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "#94a3b8", display: "block", marginBottom: 7 }}>Industry (optional)</label>
+                <select
+                  value={industry}
+                  onChange={e => setIndustry(e.target.value)}
+                  style={{ width: "100%", background: "#0d0d1a", border: `1px solid ${industry ? "#f97316" : "#2a2a40"}`, borderRadius: 8, padding: "10px 12px", color: industry ? "#e2e8f0" : "#64748b", fontSize: 14, outline: "none", appearance: "none", WebkitAppearance: "none", cursor: "pointer" }}
+                >
+                  <option value="">No restricted industry</option>
+                  {HIGH_RISK_INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
+                </select>
+              </div>
             </div>
+
+            {showResults && (
+              <TimelineNote contracting={contracting} coverageCountries={coverageCountries} industry={industry} />
+            )}
 
             {showResults && (
               <div style={{ width: "100%", maxWidth: 720, background: "#111118", border: "1px solid #1e1e30", borderRadius: 16, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.5)", marginBottom: 32 }}>
