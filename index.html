@@ -150,7 +150,7 @@
           return { status: "not_eligible", label: "Not Eligible", issuingEntity: null, detail: "Singapore cross-border issuance requires an entity anchor in a locally-issued country or EEA.", kycNote: "None of the customer's current entities qualify as an anchor." };
         }
         const anchor = contractingCountries.find(c => LOCALLY_ISSUED.has(c));
-        return { status: "conditional", label: "Cross-Border (via SG)", issuingEntity: "Singapore", detail: "Virtual cards only. No Singapore entity required.", kycNote: `Customer must complete Singapore KYC. Their ${anchor} entity satisfies the anchor requirement.` };
+        return { status: "conditional", label: "Cross-Border (via SG)", issuingEntity: "Singapore", kycNote: `Customer must complete Singapore KYC. Their ${anchor} entity satisfies the anchor requirement.` };
       }
 
       function contractingDot(country) {
