@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -27,17 +28,17 @@
         "Austria","Belgium","Bulgaria","Croatia","Cyprus","Czech Republic","Denmark",
         "Estonia","Finland","France","Germany","Greece","Hungary","Ireland","Italy",
         "Latvia","Lithuania","Luxembourg","Malta","Netherlands","Poland","Portugal",
-        "Romania","Slovakia","Slovenia","Spain","Sweden",
-        "Iceland","Liechtenstein","Norway","Switzerland",
-        "United States","Australia","Singapore","Israel","Canada","Hong Kong","United Kingdom",
+        "Romania","Slovakia","Slovenia","Spain","Sweden","Iceland","Liechtenstein",
+        "Norway","Switzerland","United States","Australia","Singapore","Israel",
+        "Canada","Hong Kong","United Kingdom",
       ]);
 
       const CROSS_BORDER_SINGAPORE = new Set([
-        "Mexico","Brazil","New Zealand","Malaysia","United Arab Emirates","Philippines","Thailand",
-        "Argentina","Colombia","Chile","Turkey","Costa Rica","Egypt","Peru",
+        "Mexico","Brazil","New Zealand","Malaysia","United Arab Emirates","Philippines",
+        "Thailand","Argentina","Colombia","Chile","Turkey","Costa Rica","Egypt","Peru",
         "Dominican Republic","Ecuador","Georgia","Bosnia & Herzegovina","Belarus",
-        "Ghana","Paraguay","Montenegro","Uzbekistan","Uganda","Kazakhstan",
-        "Guatemala","Trinidad & Tobago","Tunisia","Jamaica","Kyrgyzstan","Uruguay",
+        "Ghana","Paraguay","Montenegro","Uzbekistan","Uganda","Kazakhstan","Guatemala",
+        "Trinidad & Tobago","Tunisia","Jamaica","Kyrgyzstan","Uruguay",
       ]);
 
       const EEA = new Set([
@@ -65,6 +66,33 @@
         "Offering of Regulated Financial Services",
         "Sale and Distribution of Unlicensed Products or Services",
         "Other Businesses or Transactions Outside of Our Risk Appetite",
+      ];
+
+      const DEV_CONFIGS = [
+        {
+          key: "billing",
+          label: "Carrot Card Issuing Billing Currency",
+          options: [
+            { label: "USD", devTime: 0 },
+            { label: "Non-USD", devTime: "6–8" },
+          ],
+        },
+        {
+          key: "funding",
+          label: "Funding Structure",
+          options: [
+            { label: "Standard", devTime: 0 },
+            { label: "PLP", devTime: "TBD" },
+          ],
+        },
+        {
+          key: "oop",
+          label: "OOP Reimbursements",
+          options: [
+            { label: "Carrot", devTime: 12 },
+            { label: "Client-Payroll", devTime: 0 },
+          ],
+        },
       ];
 
       const ALL_WORLD_COUNTRIES = [
@@ -100,61 +128,34 @@
 
       function getCoverageInfo(contractingCountries, coverageCountry) {
         if (!contractingCountries || contractingCountries.length === 0 || !coverageCountry) return null;
-
         const isLocallyIssued = LOCALLY_ISSUED.has(coverageCountry);
         const isCrossBorder = CROSS_BORDER_SINGAPORE.has(coverageCountry);
-
         if (!isLocallyIssued && !isCrossBorder) {
-          return {
-            status: "not_supported", label: "Not Supported", issuingEntity: null,
-            detail: `${coverageCountry} is not currently supported by Airwallex card issuance.`,
-            kycNote: null,
-          };
+          return { status: "not_supported", label: "Not Supported", issuingEntity: null, detail: `${coverageCountry} is not currently supported by Airwallex card issuance.`, kycNote: null };
         }
-
         const coverageIsEEA = EEA.has(coverageCountry);
         const hasEEAEntity = contractingCountries.some(c => EEA.has(c));
         const hasLocallyIssuedEntity = contractingCountries.some(c => LOCALLY_ISSUED.has(c));
-
         if (isLocallyIssued) {
           if (contractingCountries.includes(coverageCountry)) {
-            return {
-              status: "supported", label: "Local Issuance",
-              issuingEntity: coverageIsEEA ? "Netherlands (EEA)" : "Local Airwallex entity",
-              detail: "Customer has an entity here. Issued locally. No additional KYC required.",
-              kycNote: null,
-            };
+            return { status: "supported", label: "Local Issuance", issuingEntity: coverageIsEEA ? "Netherlands (EEA)" : "Local Airwallex entity", detail: "Customer has an entity here. Issued locally. No additional KYC required.", kycNote: null };
           }
           if (coverageIsEEA && hasEEAEntity) {
-            const eeaAnchor = contractingCountries.find(c => EEA.has(c));
-            return {
-              status: "supported", label: "Local Issuance", issuingEntity: "Netherlands (EEA)",
-              detail: `Customer has an EEA entity (${eeaAnchor}). Issued via Airwallex Netherlands. No additional KYC required.`,
-              kycNote: null,
-            };
+            const anchor = contractingCountries.find(c => EEA.has(c));
+            return { status: "supported", label: "Local Issuance", issuingEntity: "Netherlands (EEA)", detail: `Customer has an EEA entity (${anchor}). Issued via Airwallex Netherlands. No additional KYC required.`, kycNote: null };
           }
-          return {
-            status: "not_eligible", label: "Not Eligible", issuingEntity: null,
-            detail: coverageIsEEA
-              ? "Requires a business entity in an EEA country."
-              : `Requires a business entity in ${coverageCountry}.`,
-            kycNote: "Customer does not currently have an entity in this country or region.",
-          };
+          return { status: "not_eligible", label: "Not Eligible", issuingEntity: null, detail: coverageIsEEA ? "Requires a business entity in an EEA country." : `Requires a business entity in ${coverageCountry}.`, kycNote: "Customer does not currently have an entity in this country or region." };
         }
-
-        // Cross-border (Singapore)
         if (!hasLocallyIssuedEntity) {
-          return {
-            status: "not_eligible", label: "Not Eligible", issuingEntity: null,
-            detail: "Singapore cross-border issuance requires an entity anchor in a locally-issued country or EEA.",
-            kycNote: "None of the customer's current entities qualify as an anchor.",
-          };
+          return { status: "not_eligible", label: "Not Eligible", issuingEntity: null, detail: "Singapore cross-border issuance requires an entity anchor in a locally-issued country or EEA.", kycNote: "None of the customer's current entities qualify as an anchor." };
         }
         const anchor = contractingCountries.find(c => LOCALLY_ISSUED.has(c));
-        return {
-          status: "conditional", label: "Cross-Border (via SG)", issuingEntity: "Singapore",
-          kycNote: `Customer must complete Singapore KYC. Their ${anchor} entity satisfies the anchor requirement.`,
-        };
+        return { status: "conditional", label: "Cross-Border (via SG)", issuingEntity: "Singapore", detail: "Virtual cards only. No Singapore entity required.", kycNote: `Customer must complete Singapore KYC. Their ${anchor} entity satisfies the anchor requirement.` };
+      }
+
+      function contractingDot(country) {
+        if (LOCALLY_ISSUED.has(country)) return "#22c55e";
+        return "#64748b";
       }
 
       function getDotColor(contractingCountries, coverageCountry) {
@@ -190,16 +191,13 @@
             <label style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "#94a3b8", display: "block", marginBottom: 7 }}>{label}</label>
             <div onClick={() => inputRef.current && inputRef.current.focus()}
               style={{ minHeight: 44, background: "#0d0d1a", border: `1px solid ${selected.length > 0 ? "#f97316" : "#2a2a40"}`, borderRadius: 8, padding: "6px 10px", display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", cursor: "text" }}>
-              {selected.map(c => {
-                const dot = dotFn ? dotFn(c) : "#64748b";
-                return (
-                  <span key={c} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#1a1a2e", border: "1px solid #2d2d4e", borderRadius: 6, padding: "2px 8px 2px 6px", fontSize: 12, color: "#cbd5e1", whiteSpace: "nowrap" }}>
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: dot, flexShrink: 0 }} />
-                    {c}
-                    <span onMouseDown={e => { e.preventDefault(); onRemove(c); }} style={{ marginLeft: 2, cursor: "pointer", color: "#94a3b8", fontSize: 14, lineHeight: 1 }}>x</span>
-                  </span>
-                );
-              })}
+              {selected.map(c => (
+                <span key={c} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#1a1a2e", border: "1px solid #2d2d4e", borderRadius: 6, padding: "2px 8px 2px 6px", fontSize: 12, color: "#cbd5e1", whiteSpace: "nowrap" }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: dotFn ? dotFn(c) : "#64748b", flexShrink: 0 }} />
+                  {c}
+                  <span onMouseDown={e => { e.preventDefault(); onRemove(c); }} style={{ marginLeft: 2, cursor: "pointer", color: "#94a3b8", fontSize: 14, lineHeight: 1 }}>x</span>
+                </span>
+              ))}
               <div style={{ position: "relative", flex: "1 1 120px", minWidth: 120 }}>
                 <input ref={inputRef} value={query}
                   onChange={e => { setQuery(e.target.value); setOpen(true); }}
@@ -210,31 +208,22 @@
                 />
                 {open && filtered.length > 0 && (
                   <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, minWidth: 220, zIndex: 200, background: "#111118", border: "1px solid #2a2a40", borderRadius: 8, maxHeight: 200, overflowY: "auto", boxShadow: "0 8px 32px rgba(0,0,0,0.7)" }}>
-                    {filtered.map(c => {
-                      const dot = dotFn ? dotFn(c) : "#64748b";
-                      return (
-                        <div key={c} onMouseDown={() => { onAdd(c); setQuery(""); }}
-                          style={{ padding: "8px 12px", cursor: "pointer", fontSize: 13, borderBottom: "1px solid #1a1a28", display: "flex", alignItems: "center", gap: 8, color: "#e2e8f0" }}
-                          onMouseEnter={e => e.currentTarget.style.background = "#1a1a2e"}
-                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                        >
-                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: dot, flexShrink: 0 }} />
-                          {c}
-                        </div>
-                      );
-                    })}
+                    {filtered.map(c => (
+                      <div key={c} onMouseDown={() => { onAdd(c); setQuery(""); }}
+                        style={{ padding: "8px 12px", cursor: "pointer", fontSize: 13, borderBottom: "1px solid #1a1a28", display: "flex", alignItems: "center", gap: 8, color: "#e2e8f0" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "#1a1a2e"}
+                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                      >
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: dotFn ? dotFn(c) : "#64748b", flexShrink: 0 }} />
+                        {c}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
             </div>
           </div>
         );
-      }
-
-      function contractingDot(country) {
-        if (LOCALLY_ISSUED.has(country)) return "#22c55e";
-        if (CROSS_BORDER_SINGAPORE.has(country)) return "#f59e0b";
-        return "#64748b";
       }
 
       function ResultRow({ contracting, country, index }) {
@@ -313,6 +302,66 @@
           <div style={{ ...base, background: "#0d1a2e", border: "1px solid #1e3a5c", color: "#93c5fd" }}>
             Onboarding with Airwallex typically takes <strong>1–2 weeks</strong>.
             {kycRegions > 1 && <span> Multiple KYC processes ({kycRegions} regions) can be completed <strong>in parallel</strong>.</span>}
+          </div>
+        );
+      }
+
+      function DevEstimates() {
+        const [selections, setSelections] = useState({ billing: "", funding: "", oop: "" });
+
+        const { totalDisplay, hasTBD } = useMemo(() => {
+          let min = 0, max = 0, hasTBD = false, anySelected = false;
+          DEV_CONFIGS.forEach(({ key, options }) => {
+            const sel = options.find(o => o.label === selections[key]);
+            if (!sel) return;
+            anySelected = true;
+            if (sel.devTime === "TBD") { hasTBD = true; return; }
+            if (typeof sel.devTime === "string" && sel.devTime.includes("–")) {
+              const [lo, hi] = sel.devTime.split("–").map(Number);
+              min += lo; max += hi;
+            } else {
+              min += Number(sel.devTime);
+              max += Number(sel.devTime);
+            }
+          });
+          if (!anySelected) return { totalDisplay: null, hasTBD: false };
+          const numPart = min === max ? `${min} weeks` : `${min}–${max} weeks`;
+          return { totalDisplay: hasTBD ? `${numPart} + TBD` : numPart, hasTBD };
+        }, [selections]);
+
+        return (
+          <div style={{ width: "100%", maxWidth: 720, marginTop: 32 }}>
+            <h3 style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 12 }}>Development Estimates</h3>
+            <div style={{ background: "#111118", border: "1px solid #1e1e30", borderRadius: 16, overflow: "hidden" }}>
+              {DEV_CONFIGS.map(({ key, label, options }, i) => {
+                const sel = options.find(o => o.label === selections[key]);
+                const devTime = sel ? sel.devTime : null;
+                const devLabel = devTime === 0 ? "0 weeks" : devTime === "TBD" ? "TBD" : devTime ? `${devTime} weeks` : null;
+                const devColor = devTime === "TBD" ? "#fcd34d" : devTime === 0 ? "#86efac" : devTime ? "#93c5fd" : "#475569";
+                return (
+                  <div key={key} style={{ display: "grid", gridTemplateColumns: "1fr 180px 120px", alignItems: "center", gap: 16, padding: "14px 18px", background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent", borderBottom: i < DEV_CONFIGS.length - 1 ? "1px solid #1a1a26" : "none" }}>
+                    <div style={{ fontSize: 13, color: "#e2e8f0", fontWeight: 500 }}>{label}</div>
+                    <select
+                      value={selections[key]}
+                      onChange={e => setSelections(prev => ({ ...prev, [key]: e.target.value }))}
+                      style={{ background: "#0d0d1a", border: `1px solid ${selections[key] ? "#f97316" : "#2a2a40"}`, borderRadius: 8, padding: "7px 10px", color: selections[key] ? "#e2e8f0" : "#64748b", fontSize: 13, outline: "none", appearance: "none", WebkitAppearance: "none", cursor: "pointer", width: "100%" }}
+                    >
+                      <option value="">Select...</option>
+                      {options.map(o => <option key={o.label} value={o.label}>{o.label}</option>)}
+                    </select>
+                    <div style={{ fontSize: 12, color: devColor, fontWeight: 600, textAlign: "right" }}>
+                      {devLabel || "—"}
+                    </div>
+                  </div>
+                );
+              })}
+              {totalDisplay && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderTop: "1px solid #2a2a40", background: "#0d0d1a" }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#94a3b8" }}>Total Estimated Dev Time</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: hasTBD ? "#fcd34d" : "#86efac" }}>{totalDisplay}</span>
+                </div>
+              )}
+            </div>
           </div>
         );
       }
@@ -421,6 +470,7 @@
                   </div>
                 ))}
               </div>
+              <DevEstimates />
             </div>
           </div>
         );
@@ -431,3 +481,4 @@
     </script>
   </body>
 </html>
+```
