@@ -156,10 +156,10 @@ const hasAnySupportedEntity = contractingCountries.some(c => LOCALLY_ISSUED.has(
         return { status: "supported", label: "Cross-Border (via SG)", issuingEntity: "Singapore", detail: "Issued via Airwallex Singapore. Singapore KYC required.", kycNote: null };
       }
 
-      function contractingDot(country) {
-        if (LOCALLY_ISSUED.has(country)) return "#22c55e";
-        if (CROSS_BORDER_SINGAPORE.has(country)) return "#f59e0b";
-        return "#64748b";
+ function contractingDot(country) {
+  if (LOCALLY_ISSUED.has(country) || CROSS_BORDER_SINGAPORE.has(country)) return "#22c55e";
+  return "#64748b";
+}
 }
 
       function getDotColor(contractingCountries, coverageCountry) {
