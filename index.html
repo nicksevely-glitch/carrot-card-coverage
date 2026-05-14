@@ -145,7 +145,10 @@
           }
           return { status: "not_eligible", label: "Not Eligible", issuingEntity: null, detail: coverageIsEEA ? "Requires a business entity in an EEA country." : `Requires a business entity in ${coverageCountry}.`, kycNote: "Customer does not currently have an entity in this country or region." };
         }
-        const hasAnySupportedEntity = contractingCountries.some(c => LOCALLY_ISSUED.has(c) || CROSS_BORDER_SINGAPORE.has(c));
+        if (contractingCountries.includes("Singapore")) {
+  return { status: "supported", label: "Cross-Border (via SG)", issuingEntity: "Singapore", detail: "Customer has a Singapore entity. No additional KYC required.", kycNote: null };
+}
+const hasAnySupportedEntity = contractingCountries.some(c => LOCALLY_ISSUED.has(c) || CROSS_BORDER_SINGAPORE.has(c));
         if (!hasAnySupportedEntity) {
           return { status: "not_eligible", label: "Not Eligible", issuingEntity: null, detail: "Customer must have an entity in at least one Airwallex-supported country to access Singapore cross-border issuance.", kycNote: null };
         }
