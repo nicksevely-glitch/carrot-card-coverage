@@ -341,46 +341,56 @@
       const PRODUCT_REQUEST_URL = "https://carrotfertility.atlassian.net/jira/polaris/projects/PB/ideas/view/7465482";
 
       function DevEstimates() {
-        const [selections, setSelections] = useState({ billing: "", funding: "", oop: "" });
+  const [selections, setSelections] = useState({ billing: "", funding: "", oop: "" });
 
-        return (
-          <div style={{ width: "100%", maxWidth: 720, marginTop: 32 }}>
-            <h3 style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 12 }}>Configurations</h3>
-            <div style={{ background: "#111118", border: "1px solid #1e1e30", borderRadius: 16, overflow: "hidden" }}>
-              {DEV_CONFIGS.map(({ key, label, options }, i) => {
-                const sel = options.find(o => o.label === selections[key]);
-                const devTime = sel ? sel.devTime : null;
-                const isAvailable = devTime === 0;
-                const isUnavailable = devTime !== null && devTime !== 0;
-                return (
-                  <div key={key} style={{ display: "grid", gridTemplateColumns: "1fr 180px 180px", alignItems: "center", gap: 16, padding: "14px 18px", background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent", borderBottom: i < DEV_CONFIGS.length - 1 ? "1px solid #1a1a26" : "none" }}>
-                    <div style={{ fontSize: 13, color: "#e2e8f0", fontWeight: 500 }}>{label}</div>
-                    <select
-                      value={selections[key]}
-                      onChange={e => setSelections(prev => ({ ...prev, [key]: e.target.value }))}
-                      style={{ background: "#0d0d1a", border: `1px solid ${selections[key] ? "#f97316" : "#2a2a40"}`, borderRadius: 8, padding: "7px 10px", color: selections[key] ? "#e2e8f0" : "#64748b", fontSize: 13, outline: "none", appearance: "none", WebkitAppearance: "none", cursor: "pointer", width: "100%" }}
-                    >
-                      <option value="">Select...</option>
-                      {options.map(o => <option key={o.label} value={o.label}>{o.label}</option>)}
-                    </select>
-                    <div style={{ fontSize: 12, fontWeight: 600, textAlign: "right" }}>
-                      {devTime === null && <span style={{ color: "#475569" }}>—</span>}
-                      {isAvailable && <span style={{ color: "#86efac" }}>Available</span>}
-                      {isUnavailable && (
-                        <a href={PRODUCT_REQUEST_URL} target="_blank" rel="noopener noreferrer"
-                          style={{ color: "#f87171", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
-                          Not Currently Available
-                          <span style={{ fontSize: 10 }}>↗</span>
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+  const isUSD = selections.billing === "USD";
+  const isNonUSD = selections.billing === "Non-USD";
+
+  const getDevTime = (key, option) => {
+    if (key === "funding" && option.label === "PLP") return isUSD ? 0 : option.devTime;
+    return option.devTime;
+  };
+
+  const visibleConfigs = DEV_CONFIGS.filter(({ key }) => key === "oop" ? isNonUSD : true);
+
+  return (
+    <div style={{ width: "100%", maxWidth: 720, marginTop: 32 }}>
+      <h3 style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 12 }}>Configurations</h3>
+      <div style={{ background: "#111118", border: "1px solid #1e1e30", borderRadius: 16, overflow: "hidden" }}>
+        {visibleConfigs.map(({ key, label, options }, i) => {
+          const sel = options.find(o => o.label === selections[key]);
+          const devTime = sel ? getDevTime(key, sel) : null;
+          const isAvailable = devTime === 0;
+          const isUnavailable = devTime !== null && devTime !== 0;
+          return (
+            <div key={key} style={{ display: "grid", gridTemplateColumns: "1fr 180px 180px", alignItems: "center", gap: 16, padding: "14px 18px", background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent", borderBottom: i < visibleConfigs.length - 1 ? "1px solid #1a1a26" : "none" }}>
+              <div style={{ fontSize: 13, color: "#e2e8f0", fontWeight: 500 }}>{label}</div>
+              <select
+                value={selections[key]}
+                onChange={e => setSelections(prev => ({ ...prev, [key]: e.target.value }))}
+                style={{ background: "#0d0d1a", border: `1px solid ${selections[key] ? "#f97316" : "#2a2a40"}`, borderRadius: 8, padding: "7px 10px", color: selections[key] ? "#e2e8f0" : "#64748b", fontSize: 13, outline: "none", appearance: "none", WebkitAppearance: "none", cursor: "pointer", width: "100%" }}
+              >
+                <option value="">Select...</option>
+                {options.map(o => <option key={o.label} value={o.label}>{o.label}</option>)}
+              </select>
+              <div style={{ fontSize: 12, fontWeight: 600, textAlign: "right" }}>
+                {devTime === null && <span style={{ color: "#475569" }}>—</span>}
+                {isAvailable && <span style={{ color: "#86efac" }}>Available</span>}
+                {isUnavailable && (
+                  <a href={PRODUCT_REQUEST_URL} target="_blank" rel="noopener noreferrer"
+                    style={{ color: "#f87171", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    Not Currently Available
+                    <span style={{ fontSize: 10 }}>↗</span>
+                  </a>
+                )}
+              </div>
             </div>
-          </div>
-        );
-      }
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
       function App() {
         const [contracting, setContracting] = useState([]);
