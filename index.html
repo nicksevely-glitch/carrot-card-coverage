@@ -134,7 +134,7 @@
         const isSGProgram = isCrossBorder || isSingaporeCoverage;
 
         if (!isLocallyIssued && !isCrossBorder) {
-          return { status: "not_supported", label: "Not Supported", issuingEntity: null, detail: `${coverageCountry} is not currently supported by Airwallex card issuance.`, kycRegions: [] };
+          return { status: "not_supported", label: "Not Supported", issuingEntity: null, detail: `${coverageCountry} is not currently supported`, kycRegions: [] };
         }
 
         const coverageIsEEA = EEA.has(coverageCountry);
@@ -144,10 +144,10 @@
 
         if (isSGProgram) {
           if (hasCrossBorderOrSGEntity) {
-            return { status: "supported", label: "Cross-Border (via SG)", issuingEntity: "Singapore", detail: "Issued via Airwallex Singapore. Standard Singapore KYC applies.", kycRegions: ["Singapore"] };
+            return { status: "supported", label: "Cross-Border (via SG)", issuingEntity: "Singapore", detail: "Issued via  Singapore. Standard Singapore KYC applies.", kycRegions: ["Singapore"] };
           }
           if (!hasLocallyIssuedEntity) {
-            return { status: "not_eligible", label: "Not Eligible", issuingEntity: null, detail: "Customer must have an entity in at least one Airwallex-supported country to access Singapore cross-border issuance.", kycRegions: [] };
+            return { status: "not_eligible", label: "Not Eligible", issuingEntity: null, detail: "Customer must have an entity in at least one supported country to access Singapore cross-border issuance.", kycRegions: [] };
           }
           const localAnchor = contractingCountries.find(c => LOCALLY_ISSUED.has(c));
           const localKYC = EEA.has(localAnchor) ? "Netherlands (EEA)" : localAnchor;
@@ -156,11 +156,11 @@
 
         if (contractingCountries.includes(coverageCountry)) {
           const kyc = coverageIsEEA ? "Netherlands (EEA)" : coverageCountry;
-          return { status: "supported", label: "Local Issuance", issuingEntity: coverageIsEEA ? "Netherlands (EEA)" : "Local Airwallex entity", detail: "Customer has an entity here. Issued locally. Standard regional KYC applies.", kycRegions: [kyc] };
+          return { status: "supported", label: "Local Issuance", issuingEntity: coverageIsEEA ? "Netherlands (EEA)" : "Local  entity", detail: "Customer has an entity here. Issued locally. Standard regional KYC applies.", kycRegions: [kyc] };
         }
         if (coverageIsEEA && hasEEAEntity) {
           const anchor = contractingCountries.find(c => EEA.has(c));
-          return { status: "supported", label: "Local Issuance", issuingEntity: "Netherlands (EEA)", detail: `Customer has an EEA entity (${anchor}). Issued via Airwallex Netherlands. Standard Netherlands KYC applies.`, kycRegions: ["Netherlands (EEA)"] };
+          return { status: "supported", label: "Local Issuance", issuingEntity: "Netherlands (EEA)", detail: `Customer has an EEA entity (${anchor}). Issued via  Netherlands. Standard Netherlands KYC applies.`, kycRegions: ["Netherlands (EEA)"] };
         }
         return { status: "not_eligible", label: "Not Eligible", issuingEntity: null, detail: coverageIsEEA ? "Requires a business entity in an EEA country." : `Requires a business entity in ${coverageCountry}.`, kycRegions: [] };
       }
@@ -316,7 +316,7 @@
 
         return (
           <div style={{ ...base, background: "#0d1a2e", border: "1px solid #1e3a5c", color: "#93c5fd" }}>
-            <div>Onboarding with Airwallex typically takes <strong>1–2 weeks</strong>.</div>
+            <div>Onboarding typically takes <strong>1–2 weeks</strong>.</div>
             {allKycRegions.length > 0 && (
               <div style={{ marginTop: 10 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
@@ -408,7 +408,6 @@
           <div style={{ minHeight: "100vh", background: "#0a0a0f", fontFamily: "'DM Sans', 'Segoe UI', sans-serif", color: "#e2e8f0", padding: "36px 24px", display: "flex", flexDirection: "column", alignItems: "center" }}>
             <div style={{ textAlign: "center", marginBottom: 36, maxWidth: 600 }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#1a1a2e", border: "1px solid #2d2d4e", borderRadius: 20, padding: "4px 14px", marginBottom: 18, fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "#818cf8" }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#818cf8", display: "inline-block" }} />
               </div>
               <h1 style={{ fontSize: 30, fontWeight: 700, margin: "0 0 8px", background: "linear-gradient(135deg, #f97316 0%, #fb923c 50%, #fdba74 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", letterSpacing: "-0.02em" }}>
                 Carrot Card Coverage
@@ -484,7 +483,7 @@
                   { dot: "#22c55e", label: "No Additional KYC", desc: "Covered under the customer's entity region. Standard regional KYC applies, but no additional KYC beyond that." },
                   { dot: "#f59e0b", label: "Conditional", desc: "Customer needs to go through additional KYC to support this country or region." },
                   { dot: "#ef4444", label: "Not Eligible", desc: "Customer does not have an entity in the required country or region." },
-                  { dot: "#64748b", label: "Not Supported", desc: "Country is not currently supported by Airwallex card issuance." },
+                  { dot: "#64748b", label: "Not Supported", desc: "Country is not currently supported" },
                 ].map(tier => (
                   <div key={tier.label} style={{ flex: "1 1 200px", display: "flex", alignItems: "flex-start", gap: 10, background: "#111118", border: "1px solid #1e1e30", borderRadius: 10, padding: "12px 14px" }}>
                     <div style={{ width: 7, height: 7, borderRadius: "50%", background: tier.dot, marginTop: 4, flexShrink: 0 }} />
