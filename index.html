@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -339,40 +338,22 @@
         );
       }
 
+      const PRODUCT_REQUEST_URL = "https://carrotfertility.atlassian.net/jira/polaris/projects/PB/ideas/view/7465482";
+
       function DevEstimates() {
         const [selections, setSelections] = useState({ billing: "", funding: "", oop: "" });
 
-        const { totalDisplay, hasTBD } = useMemo(() => {
-          let min = 0, max = 0, hasTBD = false, anySelected = false;
-          DEV_CONFIGS.forEach(({ key, options }) => {
-            const sel = options.find(o => o.label === selections[key]);
-            if (!sel) return;
-            anySelected = true;
-            if (sel.devTime === "TBD") { hasTBD = true; return; }
-            if (typeof sel.devTime === "string" && sel.devTime.includes("–")) {
-              const [lo, hi] = sel.devTime.split("–").map(Number);
-              min += lo; max += hi;
-            } else {
-              min += Number(sel.devTime);
-              max += Number(sel.devTime);
-            }
-          });
-          if (!anySelected) return { totalDisplay: null, hasTBD: false };
-          const numPart = min === max ? `${min} weeks` : `${min}–${max} weeks`;
-          return { totalDisplay: hasTBD ? `${numPart} + TBD` : numPart, hasTBD };
-        }, [selections]);
-
         return (
           <div style={{ width: "100%", maxWidth: 720, marginTop: 32 }}>
-            <h3 style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 12 }}>Development Estimates</h3>
+            <h3 style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 12 }}>Configurations</h3>
             <div style={{ background: "#111118", border: "1px solid #1e1e30", borderRadius: 16, overflow: "hidden" }}>
               {DEV_CONFIGS.map(({ key, label, options }, i) => {
                 const sel = options.find(o => o.label === selections[key]);
                 const devTime = sel ? sel.devTime : null;
-                const devLabel = devTime === 0 ? "0 weeks" : devTime === "TBD" ? "TBD" : devTime ? `${devTime} weeks` : null;
-                const devColor = devTime === "TBD" ? "#fcd34d" : devTime === 0 ? "#86efac" : devTime ? "#93c5fd" : "#475569";
+                const isAvailable = devTime === 0;
+                const isUnavailable = devTime !== null && devTime !== 0;
                 return (
-                  <div key={key} style={{ display: "grid", gridTemplateColumns: "1fr 180px 120px", alignItems: "center", gap: 16, padding: "14px 18px", background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent", borderBottom: i < DEV_CONFIGS.length - 1 ? "1px solid #1a1a26" : "none" }}>
+                  <div key={key} style={{ display: "grid", gridTemplateColumns: "1fr 180px 180px", alignItems: "center", gap: 16, padding: "14px 18px", background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent", borderBottom: i < DEV_CONFIGS.length - 1 ? "1px solid #1a1a26" : "none" }}>
                     <div style={{ fontSize: 13, color: "#e2e8f0", fontWeight: 500 }}>{label}</div>
                     <select
                       value={selections[key]}
@@ -382,18 +363,20 @@
                       <option value="">Select...</option>
                       {options.map(o => <option key={o.label} value={o.label}>{o.label}</option>)}
                     </select>
-                    <div style={{ fontSize: 12, color: devColor, fontWeight: 600, textAlign: "right" }}>
-                      {devLabel || "—"}
+                    <div style={{ fontSize: 12, fontWeight: 600, textAlign: "right" }}>
+                      {devTime === null && <span style={{ color: "#475569" }}>—</span>}
+                      {isAvailable && <span style={{ color: "#86efac" }}>Available</span>}
+                      {isUnavailable && (
+                        <a href={PRODUCT_REQUEST_URL} target="_blank" rel="noopener noreferrer"
+                          style={{ color: "#f87171", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                          Not Currently Available
+                          <span style={{ fontSize: 10 }}>↗</span>
+                        </a>
+                      )}
                     </div>
                   </div>
                 );
               })}
-              {totalDisplay && (
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderTop: "1px solid #2a2a40", background: "#0d0d1a" }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#94a3b8" }}>Total Estimated Dev Time</span>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: hasTBD ? "#fcd34d" : "#86efac" }}>{totalDisplay}</span>
-                </div>
-              )}
             </div>
           </div>
         );
@@ -514,4 +497,3 @@
     </script>
   </body>
 </html>
-```
