@@ -145,20 +145,20 @@
 
         if (isSGProgram) {
           if (hasCrossBorderOrSGEntity) {
-            return { status: "supported", label: "Cross-Border (via SG)", issuingEntity: "Singapore", detail: "Issued via Airwallex Singapore. No additional KYC required.", kycNote: null };
+            return { status: "supported", label: "Cross-Border (via SG)", issuingEntity: "Singapore", detail: "Issued via Airwallex Singapore. Standard Singapore KYC applies.", kycNote: null };
           }
           if (!hasLocallyIssuedEntity) {
             return { status: "not_eligible", label: "Not Eligible", issuingEntity: null, detail: "Customer must have an entity in at least one Airwallex-supported country to access Singapore cross-border issuance.", kycNote: null };
           }
-          return { status: "conditional", label: "Cross-Border (via SG)", issuingEntity: "Singapore", detail: "Requires Singapore KYC in addition to existing entity KYC.", kycNote: null };
+          const localAnchor = contractingCountries.find(c => LOCALLY_ISSUED.has(c)); return { status: "conditional", label: "Cross-Border (via SG)", issuingEntity: "Singapore", detail: `Requires Singapore KYC for cross-border access.`, kycNote: `Customer must complete ${localAnchor} KYC (for their entity) and Singapore KYC (for cross-border access). Both can be completed in parallel.` };
         }
 
         if (contractingCountries.includes(coverageCountry)) {
-          return { status: "supported", label: "Local Issuance", issuingEntity: coverageIsEEA ? "Netherlands (EEA)" : "Local Airwallex entity", detail: "Customer has an entity here. Issued locally. No additional KYC required.", kycNote: null };
+          return { status: "supported", label: "Local Issuance", issuingEntity: coverageIsEEA ? "Netherlands (EEA)" : "Local Airwallex entity", detail: "Customer has an entity here. Issued locally. Standard regional KYC applies.", kycNote: null };
         }
         if (coverageIsEEA && hasEEAEntity) {
           const anchor = contractingCountries.find(c => EEA.has(c));
-          return { status: "supported", label: "Local Issuance", issuingEntity: "Netherlands (EEA)", detail: `Customer has an EEA entity (${anchor}). Issued via Airwallex Netherlands. No additional KYC required.`, kycNote: null };
+          return { status: "supported", label: "Local Issuance", issuingEntity: "Netherlands (EEA)", detail: `Customer has an EEA entity (${anchor}). Issued via Airwallex Netherlands. Standard Netherlands KYC applies.`, kycNote: null };
         }
         return { status: "not_eligible", label: "Not Eligible", issuingEntity: null, detail: coverageIsEEA ? "Requires a business entity in an EEA country." : `Requires a business entity in ${coverageCountry}.`, kycNote: "Customer does not currently have an entity in this country or region." };
       }
@@ -466,7 +466,7 @@
               <h3 style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 12 }}>Coverage Tiers</h3>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 {[
-                  { dot: "#22c55e", label: "No Additional KYC", desc: "Customer already has an entity in this country or region. Issued locally with no extra KYC." },
+                  { dot: "#22c55e", label: "No Additional KYC", desc: "Covered under the customer's entity region. Standard regional KYC applies, but no additional KYC beyond that." },
                   { dot: "#f59e0b", label: "Conditional", desc: "Customer needs to go through additional KYC to support this country or region." },
                   { dot: "#ef4444", label: "Not Eligible", desc: "Customer does not have an entity in the required country or region." },
                   { dot: "#64748b", label: "Not Supported", desc: "Country is not currently supported by Airwallex card issuance." },
